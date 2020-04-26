@@ -1,23 +1,6 @@
 <template>
   <div id="box">
     <div id="star app">
-      <!-- 
-        color: String类型。默认'#dedede'。粒子颜色。
-        particleOpacity: Number类型。默认0.7。粒子透明度。
-        particlesNumber: Number类型。默认80。粒子数量。
-        shapeType: String类型。默认'circle'。可用的粒子外观类型有："circle","edge","triangle", "polygon","star"。
-        particleSize: Number类型。默认80。单个粒子大小。
-        linesColor: String类型。默认'#dedede'。线条颜色。
-        linesWidth: Number类型。默认1。线条宽度。
-        lineLinked: 布尔类型。默认true。连接线是否可用。
-        lineOpacity: Number类型。默认0.4。线条透明度。
-        linesDistance: Number类型。默认150。线条距离。
-        moveSpeed: Number类型。默认3。粒子运动速度。
-        hoverEffect: 布尔类型。默认true。是否有hover特效。
-        hoverMode: String类型。默认true。可用的hover模式有: "grab", "repulse", "bubble"。
-        clickEffect: 布尔类型。默认true。是否有click特效。 
-        clickMode: String类型。默认true。可用的click模式有: "push", "remove", "repulse", "bubble"
-      -->
       <vue-particles
         color="#409EFF"
         :particleOpacity="0.7"
@@ -40,14 +23,19 @@
     <transition name="el-zoom-in-center">
       <el-card class="box-card" v-show="show">
         <div slot="header" class="clearfix">
-          <h1 @click="show=!show" class="titleH1">学生信息档案系统</h1>
+          <h1 @click="show = !show" class="titleH1">在线考试系统</h1>
         </div>
         <el-form :model="userInfo">
           <el-form-item>
             <el-input placeholder="用户名" v-model="userInfo.username"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-input placeholder="密码" type="password" v-model="userInfo.password"></el-input>
+            <el-input placeholder="密码" type="password" v-model="userInfo.pwd"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-radio v-model="userInfo.jur" label="3">学生</el-radio>
+            <el-radio v-model="userInfo.jur" label="2">老师</el-radio>
+            <el-radio v-model="userInfo.jur" label="1">管理员</el-radio>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" round @click="clickLogin(userInfo)">登录</el-button>
@@ -59,16 +47,41 @@
     <transition name="el-zoom-in-center">
       <el-card class="box-card" v-show="!show">
         <div slot="header" class="clearfix">
-          <h1 @click="show=!show" class="titleH1">注册</h1>
+          <h1>注册</h1>
         </div>
-        <el-form :model="userZhuce" label-position="right" label-width="160px" class="moveBox">
-          <el-form-item label="用户名">
-            <el-input v-model="userZhuce.username"></el-input>
+        <el-form
+          :model="student"
+          :rules="rules"
+          ref="student"
+          label-position="right"
+          label-width="100px"
+          class="moveBox"
+          size="mini"
+        >
+          <el-form-item label="学号" prop="uid">
+            <el-input v-model="student.uid"></el-input>
           </el-form-item>
-          <el-form-item label="密码">
-            <el-input v-model="userZhuce.password"></el-input>
+          <el-form-item label="密码" prop="pwd">
+            <el-input v-model="student.pwd"></el-input>
           </el-form-item>
-          <el-button type="primary" round @click="clickZhuce(userInfo)">注册</el-button>
+          <el-form-item label="用户名" prop="uname">
+            <el-input v-model="student.uname"></el-input>
+          </el-form-item>
+          <el-form-item label="电话" prop="phone">
+            <el-input v-model="student.phone"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="student.email"></el-input>
+          </el-form-item>
+          <el-form-item label="专业" prop="uclass">
+            <el-select v-model="student.uclass" placeholder="请选择专业">
+              <el-option label="软件工程" value="软件工程"></el-option>
+              <el-option label="教育技术" value="教育技术"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="submitForm('student')">立即创建</el-button>
+          </el-form-item>
         </el-form>
         <br />
         <el-link type="primary" @click="show=!show">已有帐号 去登陆</el-link>
@@ -76,8 +89,8 @@
     </transition>
   </div>
 </template>
-
 <script>
+import axios from "axios";
 export default {
   created() {
     this.pageShowOnly();
@@ -88,17 +101,26 @@ export default {
       show: true,
       userInfo: {
         username: "",
-        // name: "管理员",
-        password: ""
+        pwd: "",
+        jur: ""
       },
-      userZhuce: {
-        username: "",
-        // name: "管理员",
-        password: ""
+      student: {
+        uid: "",
+        pwd: "",
+        uname: "",
+        sex: "",
+        phone: "",
+        email: "",
+        uclass: ""
       },
       rememberID: true,
       rememberPassword: false,
-      loading: false
+      loading: false,
+      rules: {
+        uid: [{ required: true, message: "请填写学号", trigger: "blur" }],
+        uname: [{ required: true, message: "请填写用户名", trigger: "blur" }],
+        pwd: [{ required: true, message: "请设置密码", trigger: "blur" }]
+      }
     };
   },
   methods: {
@@ -131,10 +153,12 @@ export default {
       // eslint-disable-next-line no-console
       xmlhttp.open(
         "POST",
-        "http://192.168.43.35:8888/user/ifUser?username=" +
+        "http://101.200.135.43:8888/user/login?username=" +
           this.userInfo.username +
-          "&password=" +
-          this.userInfo.password,
+          "&pwd=" +
+          this.userInfo.pwd +
+          "&jur=" +
+          this.userInfo.jur,
         true
       );
       xmlhttp.setRequestHeader(
@@ -145,32 +169,23 @@ export default {
       xmlhttp.onreadystatechange = doResult; //设置回调函数
       // eslint-disable-next-line no-unused-vars
       function doResult(data) {
-        // eslint-disable-next-line no-console
-        // console.log(data);
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
           let data = xmlhttp.responseText;
-          // eslint-disable-next-line no-console
-          console.log(data);
-          
-          if (data == "0") {
+          if (data == true && this.userInfo.jur == "1") {
             //将登录状态写入store.state
             self.$store.dispatch("loginAction", {
               loginInfo: self.userInfo
             });
             // 提示登录成功的信息
-            //进入DFU页面
-            // if (this.userInfo.job == 0) {
-            self.$router.push({ name: "Sadd" });
-          } 
-          else if (data == "1") {
-            self.$router.push({ name: "SCadd" });
-          }
-           else if (data == "no such user") {
-            self.$notify.error({
-              title: "登录失败",
-              message: "没有此用户或密码错误"
-            });
-          } else if (data == "incorrect password") {
+            //跳转到管理员界面
+            self.$router.push({ name: "Madm" });
+          } else if (data == true && this.userInfo.jur == "2") {
+            //跳转到老师界面
+            self.$router.push({ name: "Tadm" });
+          } else if (data == true && this.userInfo.jur == "3") {
+            //跳转到学生界面
+            self.$router.push({ name: "Sadm" });
+          } else if (data == false) {
             self.$notify.error({
               title: "登录失败",
               message: "没有此用户或密码错误"
@@ -203,24 +218,38 @@ export default {
       }
       return str.join("&");
     },
-    clickZhuce() {
-      let data = this.transformRequest(this.userZhuce);
-      let xmlhttp;
-      if (window.XMLHttpRequest) {
-        xmlhttp = new XMLHttpRequest();
-      } else {
-        // eslint-disable-next-line no-undef
-        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-      }
-      // eslint-disable-next-line no-unused-vars
-      let self = this;
-      xmlhttp.open("POST", "http://192.168.43.35:8888/user/addUser", true);
-      xmlhttp.setRequestHeader(
-        "Content-type",
-        "application/x-www-form-urlencoded"
-      );
-      xmlhttp.send(data);
-      this.submitSuccess();
+    submitForm(formName) {
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          //如果表单验证成功
+          console.log(JSON.stringify(this.student));
+          axios({
+            method: "get",
+            url: "http://101.200.135.43:8888/user/register",
+            data: this.student
+          })
+            .then(res => {
+              console.log(res);
+              console.log("发送服务器成功执行");
+              this.submitSuccess();
+            }) //发送服务器成功执行
+            .catch(err => {
+              console.log(err);
+              console.log("发送服务器失败执行");
+              this.submitError();
+            }); //发送服务器失败执行
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    submitError() {
+      this.$notify.error({
+        title: "失败",
+        message: "注册失败",
+        type: "error"
+      });
     }
   }
 };

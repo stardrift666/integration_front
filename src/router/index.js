@@ -2,18 +2,27 @@ import Vue from 'vue'
 import store from '../store/index'
 import VueRouter from 'vue-router'//登录页面
 import Login from '../components/Login.vue'
-
+//老师
+import Tadm from '../views/teacher/teacher.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
 
   {
-    path: '/Login',
+    path: '/',
     component: Login,
     name: 'Login',
     hidden: true
-  }
+  },
+  {
+    path: '/Teacher/SInformation',
+    name: 'Tadm',
+    component: Tadm,
+    meta: {
+      requiresAuth: true
+    }
+  },
 ]
 
 const router = new VueRouter({
