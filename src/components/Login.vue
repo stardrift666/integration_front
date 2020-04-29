@@ -106,9 +106,8 @@ export default {
       },
       student: {
         uid: "",
-        pwd: "",
         uname: "",
-        sex: "",
+        pwd: "",
         phone: "",
         email: "",
         uclass: ""
@@ -119,7 +118,8 @@ export default {
       rules: {
         uid: [{ required: true, message: "请填写学号", trigger: "blur" }],
         uname: [{ required: true, message: "请填写用户名", trigger: "blur" }],
-        pwd: [{ required: true, message: "请设置密码", trigger: "blur" }]
+        pwd: [{ required: true, message: "请设置密码", trigger: "blur" }],
+        email: [{ email: true,message:"请输入正确的邮箱格式" }]
       }
     };
   },
@@ -127,19 +127,6 @@ export default {
     pageShowOnly() {
       this.$store.dispatch("removeAllAction");
     },
-    // clickLogin() {
-    //   if (
-    //     this.userInfo.username == "admin" &&
-    //     this.userInfo.password == "admin"
-    //   ) {
-    //     //将登录状态写入store.state
-    //     this.$store.dispatch("loginAction", {
-    //       loginInfo: this.userInfo
-    //     });
-    //     //进入DFU页面
-    //     this.$router.push({ path: "/StudentInformation/Add" });
-    //   }
-    // },
     clickLogin() {
       //发送网络请求
       let xmlhttp;
@@ -224,7 +211,7 @@ export default {
           //如果表单验证成功
           console.log(JSON.stringify(this.student));
           axios({
-            method: "get",
+            method: "post",
             url: "http://101.200.135.43:8888/user/register",
             data: this.student
           })
